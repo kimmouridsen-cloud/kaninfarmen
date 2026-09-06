@@ -29,7 +29,6 @@ function speckle(ctx: Ctx, ox: number, oy: number, base: string, dots: string, n
 export function buildPlaceholderTextures(scene: Phaser.Scene): void {
   buildTileset(scene);
   buildSprites(scene);
-  buildFogBrush(scene);
 }
 
 function buildTileset(scene: Phaser.Scene): void {
@@ -459,17 +458,4 @@ function buildSprites(scene: Phaser.Scene): void {
   g.clear().fillStyle(0xf7e04a, 1).fillCircle(3, 3, 3);
   g.generateTexture('p_star', 6, 6);
   g.destroy();
-}
-
-function buildFogBrush(scene: Phaser.Scene): void {
-  const size = 256;
-  const tex = scene.textures.createCanvas('fogbrush', size, size)!;
-  const ctx = tex.context;
-  const grad = ctx.createRadialGradient(size / 2, size / 2, size * 0.28, size / 2, size / 2, size / 2);
-  grad.addColorStop(0, 'rgba(0,0,0,1)');
-  grad.addColorStop(0.7, 'rgba(0,0,0,0.55)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  tex.refresh();
 }

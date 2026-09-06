@@ -40,6 +40,8 @@ export class Bunny extends Phaser.GameObjects.Sprite {
   invulnTimer = 0;
   /** After a crash the bunny sits still until the player picks a direction (or this runs out). */
   waitTimer = 0;
+  /** Target lane centre (on the axis perpendicular to travel) while switching lanes, or null. */
+  private laneTarget: number | null = null;
   private hopDist = 0;
   private hopFrame = 0;
   private lastGraze = 0;
@@ -112,7 +114,8 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     }
 
     const step = this.currentSpeed * dt;
-    if (input.desiredDir) this.tryTurn(input, step);
+    if (this.laneTarget !== null) this.updateLaneShift(dt);
+    else if (input.desiredDir) this.tryTurn(input, step);
     this.moveForward(step);
     this.updateFrame(step);
   }
@@ -135,6 +138,7 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     const c = this.world.center(t.x, t.y);
     this.x = c.x;
     this.y = c.y;
+    this.laneTarget = null;
   }
 
   private tryTurn(input: GameInput, step: number): void {
@@ -167,8 +171,29 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     const prev = { x: t.x - this.dir.x, y: t.y - this.dir.y };
     if (this.world.isWalkable(prev.x, prev.y) && this.sideOpen(prev, d)) {
       const past = along + TILE;
-      if (past <= LATE_TURN_MAX) this.lateTurn(prev, d, input);
+      if (past <= LATE_TURN_MAX) {
+        this.lateTurn(prev, d, input);
+        return;
+      }
     }
+    // No turn possible, but the neighbouring lane is free: switch lanes (to grab a carrot etc.).
+    if (this.world.isWalkable(t.x + d.x, t.y + d.y)) {
+      const c = this.world.center(t.x + d.x, t.y + d.y);
+      this.laneTarget = d.x !== 0 ? c.x : c.y;
+      input.desiredDir = null;
+    }
+  }
+
+  /** Slide sideways to the neighbouring lane while still running forward. */
+  private updateLaneShift(dt: number): void {
+    const target = this.laneTarget!;
+    const horizontal = this.dir.y !== 0; // lateral axis is x when running vertically
+    const cur = horizontal ? this.x : this.y;
+    const lateral = Math.max(90, this.currentSpeed * 1.4) * dt;
+    const next = Math.abs(target - cur) <= lateral ? target : cur + Math.sign(target - cur) * lateral;
+    if (horizontal) this.x = next;
+    else this.y = next;
+    if (next === target) this.laneTarget = null;
   }
 
   private lateTurn(t: Pt, d: Pt, input: GameInput): void {
@@ -207,6 +232,7 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     this.lastFrontal = this.sceneTime;
     // Bounce back the way we came.
     this.dir = { x: -this.dir.x, y: -this.dir.y };
+    this.laneTarget = null;
     this.stunTimer = 0.5;
     this.waitTimer = 2.5;
     this.boostTimer = 0;

@@ -35,7 +35,8 @@ node tools/touch.mjs
 - Carrots on paths give 10 points, carrots in a carrot field 15. Eating carrots quickly builds a combo (x2, x3, x5).
 - Running head-on into a fence costs a life. Turning late so you clip a fence makes the bunny **dizzy** (slow motion) and may summon the farmer behind you.
 - Staying in a carrot field for a few seconds summons the farmer. He is slower than a healthy bunny but faster than a dizzy one. If he catches you: life −1.
-- The farm is revealed as you explore; the minimap fills in.
+- Pressing sideways on a path where no turn is possible switches lane, so you can grab carrots in the lane next to you.
+- The minimap fills in as you explore.
 
 ## Project layout
 

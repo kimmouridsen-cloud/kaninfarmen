@@ -42,7 +42,6 @@ export const MULTIPLIERS = [1, 2, 3, 5];
 export const START_LIVES = 3;
 export const INVULN_TIME = 1.6; // s after losing a life
 
-export const FOG_RADIUS_TILES = 8;
-export const FOG_LOOKAHEAD = 28; // px the reveal is pushed ahead of the bunny
+export const FOG_RADIUS_TILES = 9; // minimap reveal radius around the bunny
 
 export const HIGHSCORE_KEY = 'kaninfarmen.highscore.v1';

@@ -8,7 +8,6 @@ import {
   DIZZY_TIME,
   DIZZY_TIMESCALE,
   FIELD_ALARM_TIME,
-  FOG_LOOKAHEAD,
   HIGHSCORE_KEY,
   MULTIPLIERS,
   START_LIVES,
@@ -26,7 +25,7 @@ import { sfx } from '../systems/audio';
 import { bus, EV } from '../systems/EventBus';
 import { GameInput } from '../systems/Input';
 import { Pathfinder } from '../systems/Pathfinder';
-import { FogOfWar } from '../world/FogOfWar';
+import { Explored } from '../world/Explored';
 import { buildTilemap } from '../world/TilemapBuilder';
 import { World } from '../world/World';
 import { readHighScore } from './MenuScene';
@@ -42,7 +41,7 @@ export class GameScene extends Phaser.Scene {
   private farmer!: Farmer;
   private pickups!: Pickups;
   private animals: Animal[] = [];
-  private fog: FogOfWar | null = null;
+  private explored!: Explored;
   private gameInput!: GameInput;
   private pathfinder!: Pathfinder;
   private debug = false;
@@ -80,7 +79,6 @@ export class GameScene extends Phaser.Scene {
     this.timeScale = 1;
     this.over = false;
     this.animals = [];
-    this.fog = null;
   }
 
   create(): void {
@@ -128,9 +126,9 @@ export class GameScene extends Phaser.Scene {
     } else {
       cam.setZoom(ZOOM);
       cam.startFollow(this.bunny, true, 0.15, 0.15);
-      this.fog = new FogOfWar(this, this.world);
-      this.fog.reveal(this.bunny.x, this.bunny.y, true);
     }
+    this.explored = new Explored(this.world);
+    this.explored.reveal(this.bunny.x, this.bunny.y, true);
 
     this.scene.launch('Hud', { level, input: this.gameInput });
     this.time.delayedCall(50, () => {
@@ -138,7 +136,7 @@ export class GameScene extends Phaser.Scene {
       bus.emit(EV.LIVES, this.lives);
       bus.emit(EV.CARROTS, this.carrotsEaten, this.pickups.total);
       bus.emit(EV.BOOST, true);
-      if (this.fog) bus.emit(EV.SEEN, this.fog.takeNewlySeen());
+      bus.emit(EV.SEEN, this.explored.takeNewlySeen());
     });
 
     // Debug hook for automated screenshots/tests.
@@ -186,11 +184,9 @@ export class GameScene extends Phaser.Scene {
     this.updateField(bt, real);
     this.updateDizzy(real);
 
-    if (this.fog) {
-      this.fog.reveal(this.bunny.x + this.bunny.dir.x * FOG_LOOKAHEAD, this.bunny.y + this.bunny.dir.y * FOG_LOOKAHEAD);
-      const seen = this.fog.takeNewlySeen();
-      if (seen.length) bus.emit(EV.SEEN, seen);
-    }
+    this.explored.reveal(this.bunny.x, this.bunny.y);
+    const seen = this.explored.takeNewlySeen();
+    if (seen.length) bus.emit(EV.SEEN, seen);
     bus.emit(EV.POSITIONS, bt, this.farmer.busy || this.farmer.mode === 'home' ? this.farmer.tile : null);
   }
 
