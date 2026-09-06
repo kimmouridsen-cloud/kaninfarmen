@@ -66,4 +66,4 @@ Font: Press Start 2P (SIL OFL), see `public/assets/fonts/LICENSE.txt`.
 
 ## Deploy
 
-Push to `main` on GitHub with the Netlify site connected; `netlify.toml` runs `npm run build` and publishes `dist/`.
+Live at https://kaninfarmen.netlify.app. Push to `main` on GitHub (repo kimmouridsen-cloud/kaninfarmen); `netlify.toml` runs `npm run build` and publishes `dist/`.
