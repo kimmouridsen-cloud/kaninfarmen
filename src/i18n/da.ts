@@ -1,0 +1,22 @@
+/** Alle danske tekster samlet ét sted. */
+export const S = {
+  title: 'Kaninfarmen',
+  tagline: 'Find gulerødder · undgå bonden',
+  pressToStart: 'Tryk for at starte',
+  controlsHint: 'Piletaster / swipe for at dreje · Mellemrum / tryk for spurt',
+  highScore: 'Rekord',
+  score: 'Point',
+  lives: 'Liv',
+  farmerComing: 'Bonden kommer!',
+  farmerChasing: 'LØB!',
+  dizzy: 'Svimmel…',
+  ouch: 'Av!',
+  caught: 'Fanget!',
+  gameOver: 'Spillet er slut',
+  newRecord: 'Ny rekord!',
+  playAgain: 'Spil igen',
+  seed: 'Bane',
+  carrotsEaten: 'Gulerødder',
+  boostReady: 'Spurt klar',
+  combo: (m: number) => `x${m}`,
+};

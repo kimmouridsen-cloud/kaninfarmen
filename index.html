@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1b2a1b" />
+  <title>Kaninfarmen</title>
+  <style>
+    @font-face {
+      font-family: 'Press Start 2P';
+      src: url('./assets/fonts/PressStart2P.ttf') format('truetype');
+      font-display: block;
+    }
+    html, body { margin: 0; padding: 0; background: #1b2a1b; height: 100%; overflow: hidden; }
+    #game { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    canvas { touch-action: none; image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <!-- Force the pixel font to load before Phaser measures any text -->
+  <div style="position:absolute;left:-9999px;font-family:'Press Start 2P'">.</div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
