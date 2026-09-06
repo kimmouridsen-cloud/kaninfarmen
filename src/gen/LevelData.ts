@@ -45,6 +45,8 @@ export interface LevelData {
   carrots: CarrotSpawn[];
   clovers: Pt[];
   animals: AnimalSpawn[];
+  /** walkable tiles outside plots (the path network) */
+  pathTiles: Pt[];
   spawn: Pt & { dir: Pt };
   farmerHome: Pt;
   attempts: number;

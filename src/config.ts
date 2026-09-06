@@ -33,6 +33,14 @@ export const FARMER_CATCH_DIST = 9; // px
 export const FIELD_ALARM_TIME = 4; // s in a carrot field before the farmer comes
 export const FARMER_REPATH_MS = 300;
 
+// Patrolling farmhands
+export const PATROL_COUNT = 3;
+export const PATROL_SPEED = 42;
+export const PATROL_SIGHT_TILES = 8;
+export const PATROL_CHASE_TIMEOUT = 8; // s
+export const PATROL_GIVEUP_DIST = 16; // tiles
+export const PATROL_MIN_SPAWN_DIST = 25; // tiles from the bunny at start
+
 // Scoring
 export const CARROT_PATH_POINTS = 10;
 export const CARROT_FIELD_POINTS = 15;

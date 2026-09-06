@@ -332,55 +332,51 @@ function buildSprites(scene: Phaser.Scene): void {
   bunny.refresh();
   for (let i = 0; i < 6; i++) bunny.add(i, 0, i * 16, 0, 16, 16);
 
-  // Farmer: 16x20, 2 walk frames x (down, up, side)
-  const farmer = scene.textures.createCanvas('farmer', 16 * 6, 20)!;
-  const f = farmer.context;
-  const drawFarmer = (ox: number, facing: 'down' | 'up' | 'side', step: boolean) => {
-    const skin = '#f1c9a5';
-    const shirt = '#3b6fb6';
-    const overalls = '#2f4a7a';
-    const hat = '#d9b25a';
-    // legs
-    px(f, ox + 5, 15, overalls, 2, step ? 4 : 5);
-    px(f, ox + 9, 15, overalls, 2, step ? 5 : 4);
-    // body
-    px(f, ox + 4, 9, shirt, 8, 6);
-    px(f, ox + 5, 10, overalls, 6, 5);
-    px(f, ox + 3, 10, skin, 1, 4);
-    px(f, ox + 12, 10, skin, 1, 4);
-    // head
-    px(f, ox + 5, 3, skin, 6, 6);
-    // hat
-    px(f, ox + 3, 3, hat, 10, 1);
-    px(f, ox + 5, 0, hat, 6, 3);
-    if (facing === 'down') {
-      px(f, ox + 6, 5, '#2b2b2b');
-      px(f, ox + 9, 5, '#2b2b2b');
-      px(f, ox + 6, 8, '#b0674a', 4, 1); // beard
-    } else if (facing === 'side') {
-      px(f, ox + 9, 5, '#2b2b2b');
-      px(f, ox + 8, 8, '#b0674a', 3, 1);
-    } else {
-      px(f, ox + 5, 3, '#8b5a2b', 6, 3); // hair back
+  // Farmer + farmhand: 16x20, 2 walk frames x (down, up, side)
+  const buildPerson = (key: string, shirt: string, overalls: string, hat: string, beard: string) => {
+    const tex = scene.textures.createCanvas(key, 16 * 6, 20)!;
+    const f = tex.context;
+    const draw = (ox: number, facing: 'down' | 'up' | 'side', step: boolean) => {
+      const skin = '#f1c9a5';
+      px(f, ox + 5, 15, overalls, 2, step ? 4 : 5);
+      px(f, ox + 9, 15, overalls, 2, step ? 5 : 4);
+      px(f, ox + 4, 9, shirt, 8, 6);
+      px(f, ox + 5, 10, overalls, 6, 5);
+      px(f, ox + 3, 10, skin, 1, 4);
+      px(f, ox + 12, 10, skin, 1, 4);
+      px(f, ox + 5, 3, skin, 6, 6);
       px(f, ox + 3, 3, hat, 10, 1);
       px(f, ox + 5, 0, hat, 6, 3);
-    }
-    // pitchfork on the side facing
-    if (facing === 'side') {
-      px(f, ox + 13, 2, '#8b5a2b', 1, 14);
-      px(f, ox + 12, 1, '#c0c0c8', 3, 1);
-      px(f, ox + 12, 0, '#c0c0c8', 1, 1);
-      px(f, ox + 14, 0, '#c0c0c8', 1, 1);
-    }
+      if (facing === 'down') {
+        px(f, ox + 6, 5, '#2b2b2b');
+        px(f, ox + 9, 5, '#2b2b2b');
+        px(f, ox + 6, 8, beard, 4, 1);
+      } else if (facing === 'side') {
+        px(f, ox + 9, 5, '#2b2b2b');
+        px(f, ox + 8, 8, beard, 3, 1);
+      } else {
+        px(f, ox + 5, 3, '#8b5a2b', 6, 3);
+        px(f, ox + 3, 3, hat, 10, 1);
+        px(f, ox + 5, 0, hat, 6, 3);
+      }
+      if (facing === 'side') {
+        px(f, ox + 13, 2, '#8b5a2b', 1, 14);
+        px(f, ox + 12, 1, '#c0c0c8', 3, 1);
+        px(f, ox + 12, 0, '#c0c0c8', 1, 1);
+        px(f, ox + 14, 0, '#c0c0c8', 1, 1);
+      }
+    };
+    draw(0, 'down', false);
+    draw(16, 'down', true);
+    draw(32, 'up', false);
+    draw(48, 'up', true);
+    draw(64, 'side', false);
+    draw(80, 'side', true);
+    tex.refresh();
+    for (let i = 0; i < 6; i++) tex.add(i, 0, i * 16, 0, 16, 20);
   };
-  drawFarmer(0, 'down', false);
-  drawFarmer(16, 'down', true);
-  drawFarmer(32, 'up', false);
-  drawFarmer(48, 'up', true);
-  drawFarmer(64, 'side', false);
-  drawFarmer(80, 'side', true);
-  farmer.refresh();
-  for (let i = 0; i < 6; i++) farmer.add(i, 0, i * 16, 0, 16, 20);
+  buildPerson('farmer', '#3b6fb6', '#2f4a7a', '#d9b25a', '#b0674a');
+  buildPerson('farmhand', '#c0392b', '#4a5a2f', '#8b5a2b', '#5a3a1a');
 
   // Animals: 16x16, one frame each (+ mirrored at runtime)
   const animals = scene.textures.createCanvas('animals', 16 * 4, 16)!;

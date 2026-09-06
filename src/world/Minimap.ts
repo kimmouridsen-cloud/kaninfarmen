@@ -10,7 +10,7 @@ export class Minimap {
   private tex: Phaser.Textures.CanvasTexture;
   private img: Phaser.GameObjects.Image;
   private bunnyDot: Phaser.GameObjects.Arc;
-  private farmerDot: Phaser.GameObjects.Arc;
+  private farmerDots: Phaser.GameObjects.Arc[] = [];
   private dirty = false;
 
   constructor(scene: Phaser.Scene, private level: LevelData, x: number, y: number) {
@@ -25,8 +25,8 @@ export class Minimap {
     const frame = scene.add.rectangle(0, 0, w * SCALE + 8, h * SCALE + 8, 0x000000, 0.55).setOrigin(0).setStrokeStyle(2, 0xf0e2c2, 0.8);
     this.img = scene.add.image(4, 4, key).setOrigin(0).setScale(SCALE);
     this.bunnyDot = scene.add.circle(0, 0, 2.5, 0xffffff).setStrokeStyle(1, 0x000000);
-    this.farmerDot = scene.add.circle(0, 0, 2.5, 0xff3b3b).setStrokeStyle(1, 0x000000).setVisible(false);
-    this.container = scene.add.container(x, y, [frame, this.img, this.bunnyDot, this.farmerDot]);
+    for (let i = 0; i < 6; i++) this.farmerDots.push(scene.add.circle(0, 0, 2.5, 0xff3b3b).setStrokeStyle(1, 0x000000).setVisible(false));
+    this.container = scene.add.container(x, y, [frame, this.img, this.bunnyDot, ...this.farmerDots]);
   }
 
   markSeen(tiles: Pt[]): void {
@@ -70,14 +70,17 @@ export class Minimap {
     }
   }
 
-  update(bunny: Pt, farmer: Pt | null): void {
+  update(bunny: Pt, farmers: Pt[]): void {
     if (this.dirty) {
       this.tex.refresh();
       this.dirty = false;
     }
     this.bunnyDot.setPosition(4 + bunny.x * SCALE, 4 + bunny.y * SCALE);
-    if (farmer) this.farmerDot.setVisible(true).setPosition(4 + farmer.x * SCALE, 4 + farmer.y * SCALE);
-    else this.farmerDot.setVisible(false);
+    this.farmerDots.forEach((dot, i) => {
+      const f = farmers[i];
+      if (f) dot.setVisible(true).setPosition(4 + f.x * SCALE, 4 + f.y * SCALE);
+      else dot.setVisible(false);
+    });
   }
 
   destroy(): void {

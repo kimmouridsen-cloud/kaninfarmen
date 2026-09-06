@@ -10,6 +10,8 @@ import {
   FIELD_ALARM_TIME,
   HIGHSCORE_KEY,
   MULTIPLIERS,
+  PATROL_COUNT,
+  PATROL_MIN_SPAWN_DIST,
   START_LIVES,
   TILE,
   ZOOM,
@@ -39,6 +41,7 @@ export class GameScene extends Phaser.Scene {
   private world!: World;
   private bunny!: Bunny;
   private farmer!: Farmer;
+  private farmers: Farmer[] = [];
   private pickups!: Pickups;
   private animals: Animal[] = [];
   private explored!: Explored;
@@ -102,10 +105,19 @@ export class GameScene extends Phaser.Scene {
         bus.emit(EV.BOOST, false);
       },
     });
-    this.farmer = new Farmer(this, this.world, this.pathfinder, {
-      onCatch: () => this.onCaught(),
-      onState: (s) => bus.emit(EV.FARMER, s),
+    const farmerEvents = (f: () => Farmer) => ({
+      onCatch: () => this.onCaught(f()),
+      onState: () => bus.emit(EV.FARMER, this.farmers.some((x) => x.mode === 'chase' || x.mode === 'spawning')),
     });
+    this.farmer = new Farmer(this, this.world, this.pathfinder, farmerEvents(() => this.farmer));
+    this.farmers = [this.farmer];
+    // Farmhands patrolling the paths, starting far from the bunny.
+    const far = level.pathTiles.filter((t) => Math.abs(t.x - level.spawn.x) + Math.abs(t.y - level.spawn.y) >= PATROL_MIN_SPAWN_DIST);
+    for (let i = 0; i < PATROL_COUNT && far.length; i++) {
+      const hand: Farmer = new Farmer(this, this.world, this.pathfinder, farmerEvents(() => hand), 'patrol');
+      hand.startPatrol(Phaser.Utils.Array.RemoveRandomElement(far) as Pt);
+      this.farmers.push(hand);
+    }
 
     // particles
     this.dust = this.add.particles(0, 0, 'p_dust', { speed: { min: 5, max: 20 }, lifespan: 300, alpha: { start: 0.8, end: 0 }, quantity: 0, emitting: false }).setDepth(8);
@@ -147,6 +159,7 @@ export class GameScene extends Phaser.Scene {
       lives: this.lives,
       bunny: { x: Math.round(this.bunny.x), y: Math.round(this.bunny.y), dir: this.bunny.dir, tile: this.bunny.tile, speed: Math.round(this.bunny.currentSpeed) },
       farmer: this.farmer.mode,
+      hands: this.farmers.slice(1).map((f) => `${f.mode}@${f.tile.x},${f.tile.y}`),
       desired: this.gameInput.desiredDir,
       dizzy: this.dizzyTimer > 0,
       carrots: this.carrotsEaten,
@@ -156,6 +169,12 @@ export class GameScene extends Phaser.Scene {
       if (c === 'dizzy') this.startDizzy();
       else if (c === 'farmer') this.summonFarmer(this.bunny.tile, () => true, this.bunny.dir);
       else if (c === 'graze') this.onBunnyHit('graze');
+      else if (c === 'hand') {
+        // put the first farmhand 6 tiles ahead of the bunny for testing
+        const b = this.bunny.tile;
+        const t = { x: b.x + this.bunny.dir.x * 6, y: b.y + this.bunny.dir.y * 6 };
+        if (this.farmers[1] && this.world.isWalkable(t.x, t.y)) this.farmers[1].startPatrol(t);
+      }
     };
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -176,7 +195,7 @@ export class GameScene extends Phaser.Scene {
     if (this.bunny.boostReady && this.bunny.boostCooldown <= 0) bus.emit(EV.BOOST, true);
 
     const bt = this.bunny.tile;
-    this.farmer.update(dt, this.bunny, bt);
+    for (const f of this.farmers) f.update(dt, this.bunny, bt);
     for (const a of this.animals) a.update(dt);
 
     this.collect(bt);
@@ -187,7 +206,11 @@ export class GameScene extends Phaser.Scene {
     this.explored.reveal(this.bunny.x, this.bunny.y);
     const seen = this.explored.takeNewlySeen();
     if (seen.length) bus.emit(EV.SEEN, seen);
-    bus.emit(EV.POSITIONS, bt, this.farmer.busy || this.farmer.mode === 'home' ? this.farmer.tile : null);
+    bus.emit(
+      EV.POSITIONS,
+      bt,
+      this.farmers.filter((f) => f.onMap).map((f) => f.tile),
+    );
   }
 
   // ------------------------------------------------------------ rules
@@ -301,13 +324,13 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private onCaught(): void {
+  private onCaught(by: Farmer): void {
     if (this.bunny.invulnTimer > 0) return;
     sfx.play('caught');
     this.cameras.main.shake(300, 0.015);
     this.flash(S.caught, '#ff5b5b');
     this.bunny.wriggleFree();
-    this.farmer.stun(2.5);
+    by.stun(2.5);
     this.fieldTime = 0;
     this.loseLife();
   }

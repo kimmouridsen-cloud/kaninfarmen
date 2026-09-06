@@ -91,8 +91,12 @@ function tryGenerate(seed: string, attempt: number, force = false): LevelData | 
   const ok = validate(wk, spawn ?? { x: BORDER, y: BORDER, dir: DIRS[1] });
   if (!ok && !force) return null;
 
+  const pathTiles: Pt[] = [];
+  for (let i = 0; i < W * H; i++) if (wk.walkable[i] && wk.plotOf[i] === -1) pathTiles.push({ x: i % W, y: Math.floor(i / W) });
+
   return {
     seed,
+    pathTiles,
     width: W,
     height: H,
     ground: wk.ground,

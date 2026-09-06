@@ -78,12 +78,10 @@ export class HudScene extends Phaser.Scene {
       this.dizzyOverlay.setVisible(on);
       this.dizzyText.setVisible(on);
     });
-    bus.on(EV.FARMER, (state: string) => {
-      this.chaseText.setVisible(state === 'chase' || state === 'spawning');
-    });
+    bus.on(EV.FARMER, (chasing: boolean) => this.chaseText.setVisible(chasing));
     bus.on(EV.BOOST, (ready: boolean) => this.boostText.setVisible(ready));
     bus.on(EV.SEEN, (tiles: Pt[]) => this.minimap.markSeen(tiles));
-    bus.on(EV.POSITIONS, (b: Pt, f: Pt | null) => this.minimap.update(b, f));
+    bus.on(EV.POSITIONS, (b: Pt, f: Pt[]) => this.minimap.update(b, f));
   }
 
   private showMessage(text: string, color: string): void {
