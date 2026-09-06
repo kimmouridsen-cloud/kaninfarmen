@@ -7,6 +7,7 @@ import {
   BUNNY_MAX_SPEED,
   BUNNY_RADIUS,
   INVULN_TIME,
+  LANE_SHIFT_INTENT_TIME,
   LATE_TURN_MAX,
   TILE,
   TURN_TOLERANCE,
@@ -115,7 +116,7 @@ export class Bunny extends Phaser.GameObjects.Sprite {
 
     const step = this.currentSpeed * dt;
     if (this.laneTarget !== null) this.updateLaneShift(dt);
-    else if (input.desiredDir) this.tryTurn(input, step);
+    else if (input.desiredDir && !this.justShifted(input)) this.tryTurn(input, step);
     this.moveForward(step);
     this.updateFrame(step);
   }
@@ -139,6 +140,7 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     this.x = c.x;
     this.y = c.y;
     this.laneTarget = null;
+    this.lastShiftDir = null;
   }
 
   private tryTurn(input: GameInput, step: number): void {
@@ -180,8 +182,27 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     if (this.world.isWalkable(t.x + d.x, t.y + d.y)) {
       const c = this.world.center(t.x + d.x, t.y + d.y);
       this.laneTarget = d.x !== 0 ? c.x : c.y;
-      input.desiredDir = null;
+      this.lastShiftDir = { ...d };
+      input.expireIn(LANE_SHIFT_INTENT_TIME); // still turn if an opening comes up soon
     }
+  }
+
+  private lastShiftDir: Pt | null = null;
+  /** After a shift, the same intent must not immediately shift again; it may still turn at an opening. */
+  private justShifted(input: GameInput): boolean {
+    const d = input.desiredDir!;
+    if (!this.lastShiftDir || this.lastShiftDir.x !== d.x || this.lastShiftDir.y !== d.y) {
+      this.lastShiftDir = null;
+      return false;
+    }
+    // Same direction as the last shift: allow only real turns (side open), never another shift.
+    return !this.sideOpen(this.tile, d) && !this.canLateTurn(d);
+  }
+
+  private canLateTurn(d: Pt): boolean {
+    const t = this.tile;
+    const prev = { x: t.x - this.dir.x, y: t.y - this.dir.y };
+    return this.world.isWalkable(prev.x, prev.y) && this.sideOpen(prev, d) && this.alongOffset() + TILE <= LATE_TURN_MAX;
   }
 
   /** Slide sideways to the neighbouring lane while still running forward. */

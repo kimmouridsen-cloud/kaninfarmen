@@ -15,6 +15,7 @@ export const BUNNY_MAX_SPEED = 150;
 export const BUNNY_RADIUS = 5;
 export const TURN_TOLERANCE = 3; // px from tile centre for a clean turn
 export const LATE_TURN_MAX = 11; // px past the opening where a late (grazing) turn still happens
+export const LANE_SHIFT_INTENT_TIME = 1.6; // s a turn intent survives after a lane shift
 export const BOOST_MULT = 1.45;
 export const BOOST_TIME = 1.2; // s
 export const BOOST_COOLDOWN = 4; // s
