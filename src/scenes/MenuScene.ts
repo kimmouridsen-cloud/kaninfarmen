@@ -55,6 +55,8 @@ export class MenuScene extends Phaser.Scene {
     }
     this.add.text(cx, GAME_H - 50, S.controlsHint, { fontFamily: FONT, fontSize: '20px', fontStyle: 'bold', color: '#ffffff', stroke: '#2f6f2a', strokeThickness: 5 }).setOrigin(0.5);
 
+    this.add.text(GAME_W - 12, GAME_H - 8, `build ${__BUILD__}`, { fontFamily: FONT, fontSize: '14px', color: '#ffffff' }).setOrigin(1, 1).setAlpha(0.7);
+
     const seedParam = new URLSearchParams(location.search).get('seed');
     const begin = () => {
       sfx.unlock();
