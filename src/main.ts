@@ -9,7 +9,7 @@ import { MenuScene } from './scenes/MenuScene';
 const useCanvas = new URLSearchParams(location.search).get('canvas') === '1';
 
 const boot = () =>
-  new Phaser.Game({
+  ((window as unknown as { __phaser: Phaser.Game }).__phaser = new Phaser.Game({
   type: useCanvas ? Phaser.CANVAS : Phaser.AUTO,
   parent: 'game',
   width: GAME_W,
@@ -24,7 +24,7 @@ const boot = () =>
   },
   input: { activePointers: 3 },
   scene: [BootScene, MenuScene, GameScene, HudScene, GameOverScene],
-  });
+  }));
 
 // Wait for the pixel font so text is measured correctly; never block the game on it.
 const ready = document.fonts ? document.fonts.load('16px "Press Start 2P"').catch(() => undefined) : Promise.resolve();
