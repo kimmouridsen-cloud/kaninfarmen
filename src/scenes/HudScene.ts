@@ -32,30 +32,36 @@ export class HudScene extends Phaser.Scene {
   }
 
   create(data: HudData): void {
-    const st = (size: number, color = '#ffffff') => ({ fontFamily: FONT, fontSize: `${size}px`, color, stroke: '#1b2a1b', strokeThickness: Math.max(4, size / 5) });
+    const st = (size: number, color = '#ffffff') => ({ fontFamily: FONT, fontSize: `${size}px`, fontStyle: 'bold', color, stroke: '#1b2a1b', strokeThickness: Math.max(3, size / 7) });
 
-    this.hearts = this.add.text(20, 16, '', { ...st(28, '#ff4d6d'), fontFamily: 'Arial, sans-serif' });
-    this.scoreText = this.add.text(20, 58, '0', st(30, '#ffffff'));
-    this.multText = this.add.text(20, 104, '', st(22, '#f7e04a')).setVisible(false);
-    this.carrotText = this.add.text(20, 140, '', st(12, '#f28b26'));
+    // soft vignette + rounded panels give the smooth look some depth
+    this.add.image(GAME_W / 2, GAME_H / 2, 'vignette').setDisplaySize(GAME_W, GAME_H).setAlpha(0.55);
+    const panel = (x: number, y: number, w: number, h: number) =>
+      this.add.graphics().fillStyle(0x1b2a1b, 0.45).fillRoundedRect(x, y, w, h, 18);
+    panel(12, 12, 250, 150);
+
+    this.hearts = this.add.text(28, 18, '', { ...st(34, '#ff4d6d'), fontFamily: 'Arial, sans-serif' });
+    this.scoreText = this.add.text(28, 62, '0', st(42, '#ffffff'));
+    this.multText = this.add.text(150, 70, '', st(30, '#f7e04a')).setVisible(false);
+    this.carrotText = this.add.text(28, 120, '', st(20, '#f28b26'));
 
     this.minimap = new Minimap(this, data.level, GAME_W - 176, 12);
 
-    this.message = this.add.text(GAME_W / 2, GAME_H * 0.3, '', st(36)).setOrigin(0.5).setAlpha(0);
+    this.message = this.add.text(GAME_W / 2, GAME_H * 0.3, '', st(56)).setOrigin(0.5).setAlpha(0);
 
     // carrot-field alarm bar
     const barW = 320;
-    const bg = this.add.rectangle(0, 0, barW, 22, 0x000000, 0.6).setOrigin(0.5).setStrokeStyle(2, 0xffffff, 0.8);
-    this.alarmBar = this.add.rectangle(-barW / 2 + 2, 0, 0, 18, 0xff5b5b).setOrigin(0, 0.5);
-    const label = this.add.text(0, -26, S.farmerComing, st(14, '#ff9b9b')).setOrigin(0.5);
+    const bg = this.add.graphics().fillStyle(0x000000, 0.55).fillRoundedRect(-barW / 2, -12, barW, 24, 12).lineStyle(3, 0xffffff, 0.8).strokeRoundedRect(-barW / 2, -12, barW, 24, 12);
+    this.alarmBar = this.add.rectangle(-barW / 2 + 4, 0, 0, 16, 0xff5b5b).setOrigin(0, 0.5);
+    const label = this.add.text(0, -30, S.farmerComing, st(22, '#ff9b9b')).setOrigin(0.5);
     this.alarmBg = this.add.container(GAME_W / 2, GAME_H - 60, [bg, this.alarmBar, label]).setVisible(false);
 
     this.dizzyOverlay = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x7a3cff, 0.22).setOrigin(0).setVisible(false);
-    this.dizzyText = this.add.text(GAME_W / 2, 90, S.dizzy, st(22, '#e0c8ff')).setOrigin(0.5).setVisible(false);
-    this.chaseText = this.add.text(GAME_W / 2, 56, S.farmerChasing, st(32, '#ff5b5b')).setOrigin(0.5).setVisible(false);
+    this.dizzyText = this.add.text(GAME_W / 2, 96, S.dizzy, st(32, '#e0c8ff')).setOrigin(0.5).setVisible(false);
+    this.chaseText = this.add.text(GAME_W / 2, 52, S.farmerChasing, st(48, '#ff5b5b')).setOrigin(0.5).setVisible(false);
     this.tweens.add({ targets: this.chaseText, scale: 1.15, duration: 250, yoyo: true, repeat: -1 });
 
-    this.boostText = this.add.text(GAME_W - 20, GAME_H - 24, S.boostReady, st(12, '#7de08a')).setOrigin(1, 1);
+    this.boostText = this.add.text(GAME_W - 24, GAME_H - 20, S.boostReady, st(20, '#7de08a')).setOrigin(1, 1);
 
     this.buildTouchControls(data.input);
 
@@ -104,8 +110,8 @@ export class HudScene extends Phaser.Scene {
     const cy = GAME_H - 120;
     const mk = (dx: number, dy: number, dir: Pt, glyph: string) => {
       const b = this.add
-        .circle(cx + dx, cy + dy, 34, 0xffffff, 0.22)
-        .setStrokeStyle(2, 0xffffff, 0.5)
+        .circle(cx + dx, cy + dy, 36, 0xffffff, 0.22)
+        .setStrokeStyle(3, 0xffffff, 0.5)
         .setInteractive({ useHandCursor: true });
       this.add.text(cx + dx, cy + dy, glyph, { fontFamily: 'Arial, sans-serif', fontSize: '28px', color: '#ffffff' }).setOrigin(0.5).setAlpha(0.8);
       b.on('pointerdown', () => {

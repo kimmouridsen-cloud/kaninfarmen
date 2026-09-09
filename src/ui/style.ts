@@ -1,1 +1,1 @@
-export const FONT = '"Press Start 2P", "Pixelify Sans", "Courier New", monospace';
+export const FONT = '"Fredoka", "Nunito", "Arial Rounded MT Bold", "Helvetica Neue", Arial, sans-serif';

@@ -1,5 +1,8 @@
 /** Global constants for Kaninfarmen. */
 export const TILE = 16;
+/** Art is drawn at this many pixels per tile and scaled down to TILE in the world (smooth look). */
+export const ART_PX = 64;
+export const ART_SCALE = TILE / ART_PX;
 export const MAP_W = 100;
 export const MAP_H = 100;
 export const ZOOM = 3;

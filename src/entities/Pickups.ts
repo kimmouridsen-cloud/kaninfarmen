@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { TILE } from '../config';
+import { ART_SCALE, TILE } from '../config';
 import type { LevelData, Pt } from '../gen/LevelData';
 
 export type PickupKind = 'carrot' | 'clover';
@@ -24,9 +24,12 @@ export class Pickups {
   }
 
   private add(kind: PickupKind, t: Pt, field: boolean, w: number): void {
-    const sprite = this.scene.add.image(t.x * TILE + TILE / 2, t.y * TILE + TILE / 2 + 1, 'items', kind).setDepth(5);
+    const sprite = this.scene.add.image(t.x * TILE + TILE / 2, t.y * TILE + TILE / 2 + 1, 'items', kind).setScale(ART_SCALE).setDepth(5);
     if (kind === 'clover') {
       this.scene.tweens.add({ targets: sprite, y: sprite.y - 2, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    } else {
+      // carrots sway gently, offset per tile so they don't move in lockstep
+      this.scene.tweens.add({ targets: sprite, angle: { from: -6, to: 6 }, duration: 900 + ((t.x * 7 + t.y * 13) % 5) * 90, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     }
     this.byTile.set(t.y * w + t.x, { kind, field, tile: t, sprite });
   }
@@ -39,7 +42,7 @@ export class Pickups {
     const s = p.sprite;
     this.scene.tweens.add({
       targets: s,
-      scale: 1.6,
+      scale: ART_SCALE * 1.6,
       alpha: 0,
       y: s.y - 6,
       duration: 180,

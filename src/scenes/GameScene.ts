@@ -120,12 +120,14 @@ export class GameScene extends Phaser.Scene {
     }
 
     // particles
-    this.dust = this.add.particles(0, 0, 'p_dust', { speed: { min: 5, max: 20 }, lifespan: 300, alpha: { start: 0.8, end: 0 }, quantity: 0, emitting: false }).setDepth(8);
+    this.dust = this.add
+      .particles(0, 0, 'p_dust', { speed: { min: 5, max: 20 }, lifespan: 300, alpha: { start: 0.8, end: 0 }, scale: { start: 0.6, end: 0.1 }, quantity: 0, emitting: false })
+      .setDepth(8);
     this.bits = this.add
-      .particles(0, 0, 'p_carrot', { speed: { min: 30, max: 70 }, lifespan: 400, gravityY: 120, alpha: { start: 1, end: 0 }, quantity: 0, emitting: false })
+      .particles(0, 0, 'p_carrot', { speed: { min: 30, max: 70 }, lifespan: 400, gravityY: 120, alpha: { start: 1, end: 0 }, scale: { start: 0.5, end: 0.1 }, quantity: 0, emitting: false })
       .setDepth(12);
     this.stars = this.add
-      .particles(0, 0, 'p_star', { speed: { min: 20, max: 50 }, lifespan: 500, scale: { start: 0.8, end: 0 }, quantity: 0, emitting: false })
+      .particles(0, 0, 'p_star', { speed: { min: 20, max: 50 }, lifespan: 500, scale: { start: 0.5, end: 0 }, rotate: { start: 0, end: 180 }, quantity: 0, emitting: false })
       .setDepth(12);
 
     // camera

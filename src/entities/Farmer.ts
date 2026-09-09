@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import {
+  ART_SCALE,
   FARMER_CATCH_DIST,
   FARMER_CHASE_TIMEOUT,
   FARMER_GIVEUP_DIST,
@@ -9,11 +10,11 @@ import {
   PATROL_GIVEUP_DIST,
   PATROL_SIGHT_TILES,
   PATROL_SPEED,
-  TILE,
 } from '../config';
 import type { Pt } from '../gen/LevelData';
 import { sfx } from '../systems/audio';
 import type { Pathfinder } from '../systems/Pathfinder';
+import { FONT } from '../ui/style';
 import type { World } from '../world/World';
 
 export type FarmerState = 'hidden' | 'spawning' | 'chase' | 'stunned' | 'home' | 'patrol';
@@ -24,13 +25,14 @@ export interface FarmerEvents {
   onState: (s: FarmerState) => void;
 }
 
-export class Farmer extends Phaser.GameObjects.Sprite {
+export class Farmer extends Phaser.GameObjects.Container {
   mode: FarmerState = 'hidden';
+  readonly sprite: Phaser.GameObjects.Sprite;
+  readonly shadow: Phaser.GameObjects.Image;
   private path: Pt[] = [];
   private repathMs = 0;
   private timer = 0;
-  private walkDist = 0;
-  private walkFrame = 0;
+  private walkPhase = 0;
   private facing: Pt = { x: 0, y: 1 };
   private alert: Phaser.GameObjects.Text;
 
@@ -41,13 +43,15 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     private events: FarmerEvents,
     readonly kind: FarmerKind = 'boss',
   ) {
-    super(scene, 0, 0, kind === 'boss' ? 'farmer' : 'farmhand', 0);
-    this.setOrigin(0.5, 0.85);
+    super(scene, 0, 0);
+    this.shadow = scene.add.image(0, 2, 'shadow').setScale(ART_SCALE * 0.75, ART_SCALE * 0.6).setAlpha(0.8);
+    this.sprite = scene.add.sprite(0, 0, kind === 'boss' ? 'farmer' : 'farmhand', 0).setOrigin(0.5, 0.9).setScale(ART_SCALE);
+    this.add([this.shadow, this.sprite]);
     this.setDepth(11);
     this.setVisible(false);
-    scene.add.existing(this);
+    scene.add.existing(this as unknown as Phaser.GameObjects.GameObject);
     this.alert = scene.add
-      .text(0, 0, '!', { fontFamily: 'monospace', fontSize: '12px', color: '#ff3b3b', fontStyle: 'bold', stroke: '#000', strokeThickness: 2 })
+      .text(0, 0, '!', { fontFamily: FONT, fontSize: '14px', color: '#ff3b3b', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 })
       .setOrigin(0.5, 1)
       .setDepth(12)
       .setVisible(false);
@@ -65,6 +69,20 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     return this.mode !== 'hidden';
   }
 
+  /** Appear (or, when `move` is false, stay put) with a "!" and start chasing shortly after. */
+  spawnAt(tile: Pt, move = true): void {
+    const c = this.world.center(tile.x, tile.y);
+    if (move) this.setPosition(c.x, c.y);
+    else sfx.play('shout'); // a patrolling farmhand just spotted the bunny
+    this.setVisible(true);
+    this.path = [];
+    this.timer = 0.7;
+    this.setMode('spawning');
+    this.alert.setVisible(true).setAlpha(1);
+    this.alert.setPosition(this.x, this.y - 22);
+    this.scene.tweens.add({ targets: this.alert, y: { from: this.y - 22, to: this.y - 28 }, alpha: { from: 1, to: 0 }, duration: 900 });
+  }
+
   /** Start wandering the paths from this tile (patrol farmhands). */
   startPatrol(tile: Pt): void {
     const c = this.world.center(tile.x, tile.y);
@@ -73,6 +91,29 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     this.path = [];
     this.timer = 0;
     this.setMode('patrol');
+  }
+
+  setMode(s: FarmerState): void {
+    if (this.mode === s) return;
+    this.mode = s;
+    this.events.onState(s);
+  }
+
+  stun(seconds: number): void {
+    this.timer = seconds;
+    this.setMode('stunned');
+  }
+
+  private goHome(): void {
+    if (this.kind === 'patrol') {
+      this.path = [];
+      this.timer = 0;
+      this.setMode('patrol');
+      return;
+    }
+    const home = this.world.level.farmerHome;
+    this.path = this.pathfinder.find(this.tile, home) ?? [];
+    this.setMode('home');
   }
 
   private pickPatrolTarget(): void {
@@ -105,43 +146,6 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     return true;
   }
 
-  /** Appear (or, when `move` is false, stay put) with a "!" and start chasing shortly after. */
-  spawnAt(tile: Pt, move = true): void {
-    const c = this.world.center(tile.x, tile.y);
-    if (move) this.setPosition(c.x, c.y);
-    else sfx.play('shout'); // a patrolling farmhand just spotted the bunny
-    this.setVisible(true);
-    this.path = [];
-    this.timer = 0.7;
-    this.setMode('spawning');
-    this.alert.setVisible(true);
-    this.alert.setPosition(this.x, this.y - 22);
-    this.scene.tweens.add({ targets: this.alert, y: { from: this.y - 22, to: this.y - 28 }, alpha: { from: 1, to: 0 }, duration: 900 });
-  }
-
-  setMode(s: FarmerState): void {
-    if (this.mode === s) return;
-    this.mode = s;
-    this.events.onState(s);
-  }
-
-  stun(seconds: number): void {
-    this.timer = seconds;
-    this.setMode('stunned');
-  }
-
-  private goHome(): void {
-    if (this.kind === 'patrol') {
-      this.path = [];
-      this.timer = 0;
-      this.setMode('patrol');
-      return;
-    }
-    const home = this.world.level.farmerHome;
-    this.path = this.pathfinder.find(this.tile, home) ?? [];
-    this.setMode('home');
-  }
-
   update(dt: number, bunny: Pt, bunnyTile: Pt): void {
     switch (this.mode) {
       case 'hidden':
@@ -154,13 +158,13 @@ export class Farmer extends Phaser.GameObjects.Sprite {
           this.setMode('chase');
         }
         this.face(bunny);
-        this.updateFrame(0);
+        this.updateVisual(0);
         return;
       case 'stunned':
         this.timer -= dt;
-        this.setAngle(Math.sin(this.timer * 20) * 8);
+        this.sprite.setAngle(Math.sin(this.timer * 20) * 12);
         if (this.timer <= 0) {
-          this.setAngle(0);
+          this.sprite.setAngle(0);
           this.goHome();
         }
         return;
@@ -200,7 +204,7 @@ export class Farmer extends Phaser.GameObjects.Sprite {
             this.pickPatrolTarget();
             this.timer = 1 + Math.random() * 2; // pause before the next stroll if none found
           }
-          this.updateFrame(0);
+          this.updateVisual(0);
           return;
         }
         this.followPath(dt, PATROL_SPEED);
@@ -219,7 +223,7 @@ export class Farmer extends Phaser.GameObjects.Sprite {
 
   private followPath(dt: number, speed: number): void {
     if (!this.path.length) {
-      this.updateFrame(0);
+      this.updateVisual(0);
       return;
     }
     const target = this.world.center(this.path[0].x, this.path[0].y);
@@ -237,7 +241,7 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     }
     if (Math.abs(dx) > Math.abs(dy)) this.facing = { x: Math.sign(dx), y: 0 };
     else if (dy !== 0) this.facing = { x: 0, y: Math.sign(dy) };
-    this.updateFrame(step);
+    this.updateVisual(step);
   }
 
   private face(p: Pt): void {
@@ -246,16 +250,15 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     this.facing = Math.abs(dx) > Math.abs(dy) ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) || 1 };
   }
 
-  private updateFrame(step: number): void {
-    this.walkDist += step;
-    if (this.walkDist >= TILE / 2) {
-      this.walkDist = 0;
-      this.walkFrame ^= 1;
-    }
-    let base = 4;
-    if (this.facing.y > 0) base = 0;
-    else if (this.facing.y < 0) base = 2;
-    this.setFlipX(this.facing.x < 0);
-    this.setFrame(base + (step > 0 ? this.walkFrame : 0));
+  private updateVisual(step: number): void {
+    this.walkPhase = (this.walkPhase + step / 12) % 1;
+    const bob = step > 0 ? Math.abs(Math.sin(this.walkPhase * Math.PI * 2)) : 0;
+    this.sprite.y = -bob * 1.5;
+    this.sprite.setAngle(step > 0 ? Math.sin(this.walkPhase * Math.PI * 2) * 4 : 0);
+    let frame = 2;
+    if (this.facing.y > 0) frame = 0;
+    else if (this.facing.y < 0) frame = 1;
+    this.sprite.setFrame(frame);
+    this.sprite.setFlipX(this.facing.x < 0);
   }
 }

@@ -9,19 +9,20 @@
   <title>Kaninfarmen</title>
   <style>
     @font-face {
-      font-family: 'Press Start 2P';
-      src: url('./assets/fonts/PressStart2P.ttf') format('truetype');
+      font-family: 'Fredoka';
+      src: url('./assets/fonts/Fredoka-Bold.ttf') format('truetype');
+      font-weight: 700;
       font-display: block;
     }
     html, body { margin: 0; padding: 0; background: #1b2a1b; height: 100%; overflow: hidden; }
     #game { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
-    canvas { touch-action: none; image-rendering: pixelated; }
+    canvas { touch-action: none; }
   </style>
 </head>
 <body>
   <div id="game"></div>
   <!-- Force the pixel font to load before Phaser measures any text -->
-  <div style="position:absolute;left:-9999px;font-family:'Press Start 2P'">.</div>
+  <div style="position:absolute;left:-9999px;font-family:'Fredoka';font-weight:700">.</div>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

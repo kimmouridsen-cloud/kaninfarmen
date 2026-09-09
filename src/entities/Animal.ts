@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { TILE } from '../config';
+import { ART_SCALE, TILE } from '../config';
 import type { AnimalSpawn, Plot } from '../gen/LevelData';
 
 /** Livestock that wanders slowly inside its pen. Purely decorative. */
@@ -11,7 +11,8 @@ export class Animal extends Phaser.GameObjects.Sprite {
 
   constructor(scene: Phaser.Scene, spawn: AnimalSpawn, plot: Plot) {
     super(scene, spawn.x * TILE + TILE / 2, spawn.y * TILE + TILE / 2, 'animals', spawn.kind);
-    this.setOrigin(0.5, 0.8);
+    this.setOrigin(0.5, 0.88);
+    this.setScale(ART_SCALE);
     this.setDepth(9);
     // stay well inside the fence and off the trough tile
     this.area = {
@@ -25,6 +26,8 @@ export class Animal extends Phaser.GameObjects.Sprite {
     this.pause = Math.random() * 3;
     scene.add.existing(this);
   }
+
+  private walkPhase = 0;
 
   update(dt: number): void {
     if (this.pause > 0) {
@@ -48,5 +51,7 @@ export class Animal extends Phaser.GameObjects.Sprite {
     this.x += (dx / d) * step;
     this.y += (dy / d) * step;
     if (Math.abs(dx) > 0.5) this.setFlipX(dx > 0);
+    this.walkPhase += step / 6;
+    this.setAngle(Math.sin(this.walkPhase) * 3);
   }
 }

@@ -22,7 +22,7 @@ export class Minimap {
     this.tex.context.fillRect(0, 0, w, h);
     this.tex.refresh();
 
-    const frame = scene.add.rectangle(0, 0, w * SCALE + 8, h * SCALE + 8, 0x000000, 0.55).setOrigin(0).setStrokeStyle(2, 0xf0e2c2, 0.8);
+    const frame = scene.add.graphics().fillStyle(0x1b2a1b, 0.55).fillRoundedRect(-4, -4, w * SCALE + 16, h * SCALE + 16, 12).lineStyle(3, 0xf0e2c2, 0.8).strokeRoundedRect(-4, -4, w * SCALE + 16, h * SCALE + 16, 12);
     this.img = scene.add.image(4, 4, key).setOrigin(0).setScale(SCALE);
     this.bunnyDot = scene.add.circle(0, 0, 2.5, 0xffffff).setStrokeStyle(1, 0x000000);
     for (let i = 0; i < 6; i++) this.farmerDots.push(scene.add.circle(0, 0, 2.5, 0xff3b3b).setStrokeStyle(1, 0x000000).setVisible(false));

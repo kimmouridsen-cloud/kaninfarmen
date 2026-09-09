@@ -58,11 +58,13 @@ assets-src/          raw downloaded/purchased art packs (git-ignored)
 
 ## Art
 
-The game currently uses programmatic placeholder pixel art (`src/world/PlaceholderArt.ts`).
-The plan is to swap in the "Pixel Farm RPG (16x16)" pack by exclusiveOlive (itch.io):
-drop the unzipped pack into `assets-src/` and it will be packed into `public/assets/`.
+Smooth "toy world" vector art drawn in code (`src/world/SmoothArt.ts`): rounded shapes, gradients and soft
+shadows, rendered at 64 px per tile and scaled into the 16 px world (`ART_PX`/`ART_SCALE` in `config.ts`).
+Characters are a shadow blob plus a body sprite animated with tweens (hop, squash, lean). Any texture can be
+replaced by an illustrated PNG with the same key and frame layout. The old pixel placeholders live in
+`PlaceholderArt.ts` for reference.
 
-Font: Press Start 2P (SIL OFL), see `public/assets/fonts/LICENSE.txt`.
+Fonts: Fredoka (UI) and Press Start 2P (unused now), both SIL OFL, see `public/assets/fonts/LICENSE.txt`.
 
 ## Deploy
 

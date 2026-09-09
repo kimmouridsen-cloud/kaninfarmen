@@ -15,9 +15,9 @@ const boot = () =>
   width: GAME_W,
   height: GAME_H,
   backgroundColor: '#1b2a1b',
-  pixelArt: true,
-  roundPixels: true,
-  antialias: false,
+  pixelArt: false,
+  roundPixels: false,
+  antialias: true,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -27,5 +27,5 @@ const boot = () =>
   }));
 
 // Wait for the pixel font so text is measured correctly; never block the game on it.
-const ready = document.fonts ? document.fonts.load('16px "Press Start 2P"').catch(() => undefined) : Promise.resolve();
+const ready = document.fonts ? document.fonts.load('bold 16px "Fredoka"').catch(() => undefined) : Promise.resolve();
 Promise.race([ready, new Promise((r) => setTimeout(r, 1500))]).then(boot);

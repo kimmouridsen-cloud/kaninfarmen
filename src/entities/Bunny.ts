@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import {
+  ART_SCALE,
   BOOST_COOLDOWN,
   BOOST_MULT,
   BOOST_TIME,
@@ -16,6 +17,9 @@ import type { Pt } from '../gen/LevelData';
 import type { GameInput } from '../systems/Input';
 import type { World } from '../world/World';
 
+/** The bunny is drawn a little larger than one tile so it reads well. */
+const BUNNY_VISUAL = 1.3;
+
 export type HitKind = 'frontal' | 'graze';
 
 export interface BunnyEvents {
@@ -29,8 +33,11 @@ export interface BunnyEvents {
  * a turn happens when the tile to the side opens up (at least 3 walkable
  * tiles that way, so a parallel lane in the same corridor never counts).
  * Pressing late (just past an opening) still turns but grazes the fence.
+ *
+ * Visuals: a shadow blob plus a body sprite that hops (offset + squash) as
+ * the bunny moves. The container position is the logical position.
  */
-export class Bunny extends Phaser.GameObjects.Sprite {
+export class Bunny extends Phaser.GameObjects.Container {
   dir: Pt = { x: 1, y: 0 };
   baseSpeed = BUNNY_BASE_SPEED;
   /** external multiplier (dizzy) */
@@ -41,10 +48,12 @@ export class Bunny extends Phaser.GameObjects.Sprite {
   invulnTimer = 0;
   /** After a crash the bunny sits still until the player picks a direction (or this runs out). */
   waitTimer = 0;
+  readonly sprite: Phaser.GameObjects.Sprite;
+  readonly shadow: Phaser.GameObjects.Image;
   /** Target lane centre (on the axis perpendicular to travel) while switching lanes, or null. */
   private laneTarget: number | null = null;
-  private hopDist = 0;
-  private hopFrame = 0;
+  private lastShiftDir: Pt | null = null;
+  private hopPhase = 0;
   private lastGraze = 0;
   private lastFrontal = 0;
   private sceneTime = 0;
@@ -57,11 +66,13 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     private events: BunnyEvents,
   ) {
     const c = world.center(tile.x, tile.y);
-    super(scene, c.x, c.y, 'bunny', 4);
+    super(scene, c.x, c.y);
     this.dir = { ...dir };
-    this.setOrigin(0.5, 0.75);
+    this.shadow = scene.add.image(0, 3, 'shadow').setScale(ART_SCALE * 0.7, ART_SCALE * 0.6).setAlpha(0.8);
+    this.sprite = scene.add.sprite(0, 0, 'bunny', 2).setOrigin(0.5, 0.86).setScale(ART_SCALE * BUNNY_VISUAL);
+    this.add([this.shadow, this.sprite]);
     this.setDepth(10);
-    scene.add.existing(this);
+    scene.add.existing(this as unknown as Phaser.GameObjects.GameObject);
   }
 
   get tile(): Pt {
@@ -87,7 +98,7 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     if (this.boostTimer > 0) this.boostTimer -= dt;
     else if (this.boostCooldown > 0) this.boostCooldown -= dt;
     if (this.invulnTimer > 0) this.invulnTimer -= dt;
-    this.setAlpha(this.invulnTimer > 0 ? (Math.floor(this.sceneTime * 12) % 2 ? 0.35 : 1) : 1);
+    this.sprite.setAlpha(this.invulnTimer > 0 ? (Math.floor(this.sceneTime * 12) % 2 ? 0.35 : 1) : 1);
 
     if (input.consumeBoost() && this.boostReady && this.stunTimer <= 0) {
       this.boostTimer = BOOST_TIME;
@@ -97,7 +108,7 @@ export class Bunny extends Phaser.GameObjects.Sprite {
 
     if (this.stunTimer > 0) {
       this.stunTimer -= dt;
-      this.updateFrame(0);
+      this.updateVisual(0, dt);
       return;
     }
     if (this.waitTimer > 0) {
@@ -109,7 +120,7 @@ export class Bunny extends Phaser.GameObjects.Sprite {
         input.desiredDir = null;
         this.waitTimer = 0;
       } else {
-        this.updateFrame(0);
+        this.updateVisual(0, dt);
         return;
       }
     }
@@ -118,7 +129,7 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     if (this.laneTarget !== null) this.updateLaneShift(dt);
     else if (input.desiredDir && !this.justShifted(input)) this.tryTurn(input, step);
     this.moveForward(step);
-    this.updateFrame(step);
+    this.updateVisual(step, dt);
   }
 
   // ------------------------------------------------------------ turning
@@ -141,6 +152,22 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     this.y = c.y;
     this.laneTarget = null;
     this.lastShiftDir = null;
+  }
+
+  /** After a shift, the same intent must not immediately shift again; it may still turn at an opening. */
+  private justShifted(input: GameInput): boolean {
+    const d = input.desiredDir!;
+    if (!this.lastShiftDir || this.lastShiftDir.x !== d.x || this.lastShiftDir.y !== d.y) {
+      this.lastShiftDir = null;
+      return false;
+    }
+    return !this.sideOpen(this.tile, d) && !this.canLateTurn(d);
+  }
+
+  private canLateTurn(d: Pt): boolean {
+    const t = this.tile;
+    const prev = { x: t.x - this.dir.x, y: t.y - this.dir.y };
+    return this.world.isWalkable(prev.x, prev.y) && this.sideOpen(prev, d) && this.alongOffset() + TILE <= LATE_TURN_MAX;
   }
 
   private tryTurn(input: GameInput, step: number): void {
@@ -187,22 +214,14 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     }
   }
 
-  private lastShiftDir: Pt | null = null;
-  /** After a shift, the same intent must not immediately shift again; it may still turn at an opening. */
-  private justShifted(input: GameInput): boolean {
-    const d = input.desiredDir!;
-    if (!this.lastShiftDir || this.lastShiftDir.x !== d.x || this.lastShiftDir.y !== d.y) {
-      this.lastShiftDir = null;
-      return false;
+  private lateTurn(t: Pt, d: Pt, input: GameInput): void {
+    this.snapTo(t);
+    this.dir = { ...d };
+    input.desiredDir = null;
+    if (this.sceneTime - this.lastGraze > 1.5 && this.invulnTimer <= 0) {
+      this.lastGraze = this.sceneTime;
+      this.events.onHit('graze');
     }
-    // Same direction as the last shift: allow only real turns (side open), never another shift.
-    return !this.sideOpen(this.tile, d) && !this.canLateTurn(d);
-  }
-
-  private canLateTurn(d: Pt): boolean {
-    const t = this.tile;
-    const prev = { x: t.x - this.dir.x, y: t.y - this.dir.y };
-    return this.world.isWalkable(prev.x, prev.y) && this.sideOpen(prev, d) && this.alongOffset() + TILE <= LATE_TURN_MAX;
   }
 
   /** Slide sideways to the neighbouring lane while still running forward. */
@@ -215,16 +234,6 @@ export class Bunny extends Phaser.GameObjects.Sprite {
     if (horizontal) this.x = next;
     else this.y = next;
     if (next === target) this.laneTarget = null;
-  }
-
-  private lateTurn(t: Pt, d: Pt, input: GameInput): void {
-    this.snapTo(t);
-    this.dir = { ...d };
-    input.desiredDir = null;
-    if (this.sceneTime - this.lastGraze > 1.5 && this.invulnTimer <= 0) {
-      this.lastGraze = this.sceneTime;
-      this.events.onHit('graze');
-    }
   }
 
   // ------------------------------------------------------------ movement
@@ -272,17 +281,26 @@ export class Bunny extends Phaser.GameObjects.Sprite {
 
   // ------------------------------------------------------------ visuals
 
-  private updateFrame(step: number): void {
-    this.hopDist += step;
-    if (this.hopDist >= 7) {
-      this.hopDist = 0;
-      this.hopFrame ^= 1;
-      if (this.hopFrame) this.events.onHop();
-    }
-    let base = 4; // side
-    if (this.dir.y > 0) base = 0;
-    else if (this.dir.y < 0) base = 2;
-    this.setFlipX(this.dir.x < 0);
-    this.setFrame(base + (step > 0 ? this.hopFrame : 0));
+  private updateVisual(step: number, dt: number): void {
+    // Hop cycle driven by distance travelled; one hop per ~14 px.
+    const prev = this.hopPhase;
+    this.hopPhase = (this.hopPhase + step / 14) % 1;
+    if (step > 0 && this.hopPhase < prev) this.events.onHop();
+    const lift = step > 0 ? Math.sin(this.hopPhase * Math.PI) : 0;
+    const boosted = this.boostTimer > 0 ? 1.3 : 1;
+    this.sprite.y = -lift * 3.5 * boosted;
+    // squash at landing, stretch mid-air
+    const stretch = step > 0 ? 1 + (lift - 0.5) * 0.16 : 1;
+    this.sprite.setScale((ART_SCALE * BUNNY_VISUAL) / stretch, ART_SCALE * BUNNY_VISUAL * stretch);
+    this.shadow.setScale(ART_SCALE * 0.7 * (1 - lift * 0.25), ART_SCALE * 0.6 * (1 - lift * 0.25)).setAlpha(0.8 - lift * 0.3);
+    // facing + lean into the run direction
+    let frame = 2;
+    if (this.dir.y > 0) frame = 0;
+    else if (this.dir.y < 0) frame = 1;
+    this.sprite.setFrame(frame);
+    this.sprite.setFlipX(this.dir.x < 0);
+    const lean = step > 0 ? this.dir.x * 6 : 0;
+    this.sprite.setAngle(lean + (this.stunTimer > 0 ? Math.sin(this.sceneTime * 30) * 10 : 0));
+    void dt;
   }
 }

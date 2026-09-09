@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { buildPlaceholderTextures } from '../world/PlaceholderArt';
+import { buildSmoothTextures } from '../world/SmoothArt';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -7,7 +7,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    buildPlaceholderTextures(this);
+    buildSmoothTextures(this);
     this.scene.start('Menu');
   }
 }

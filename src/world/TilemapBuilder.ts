@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { TILE } from '../config';
+import { ART_PX, ART_SCALE } from '../config';
 import type { LevelData } from '../gen/LevelData';
+import { TILE_MARGIN, TILE_SPACING } from './SmoothArt';
 
 export interface BuiltMap {
   map: Phaser.Tilemaps.Tilemap;
@@ -20,16 +21,17 @@ function to2D(arr: Int16Array, w: number, h: number): number[][] {
 }
 
 export function buildTilemap(scene: Phaser.Scene, level: LevelData, tilesetKey = 'tiles'): BuiltMap {
-  const map = scene.make.tilemap({ tileWidth: TILE, tileHeight: TILE, width: level.width, height: level.height });
-  const tileset = map.addTilesetImage(tilesetKey, tilesetKey, TILE, TILE, 0, 0)!;
+  // Tiles are drawn at ART_PX and the layers scaled down to the 16 px world (smooth look).
+  const map = scene.make.tilemap({ tileWidth: ART_PX, tileHeight: ART_PX, width: level.width, height: level.height });
+  const tileset = map.addTilesetImage(tilesetKey, tilesetKey, ART_PX, ART_PX, TILE_MARGIN, TILE_SPACING)!;
   const ground = map.createBlankLayer('ground', tileset)!;
   const decor = map.createBlankLayer('decor', tileset)!;
   const objects = map.createBlankLayer('objects', tileset)!;
   ground.putTilesAt(to2D(level.ground, level.width, level.height), 0, 0);
   decor.putTilesAt(to2D(level.decor, level.width, level.height), 0, 0);
   objects.putTilesAt(to2D(level.objects, level.width, level.height), 0, 0);
-  ground.setDepth(0);
-  decor.setDepth(1);
-  objects.setDepth(2);
+  ground.setDepth(0).setScale(ART_SCALE);
+  decor.setDepth(1).setScale(ART_SCALE);
+  objects.setDepth(2).setScale(ART_SCALE);
   return { map, ground, objects, decor };
 }
