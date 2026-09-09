@@ -1,6 +1,7 @@
 /** Alle danske tekster samlet ét sted. */
 export const S = {
   title: 'Kaninfarmen',
+  eyebrow: 'ET LILLE EVENTYR PÅ LANDET',
   tagline: 'Find gulerødder · undgå bonden',
   pressToStart: 'Tryk for at starte',
   controlsHint: 'Piletaster / swipe for at dreje · Mellemrum / tryk for spurt',

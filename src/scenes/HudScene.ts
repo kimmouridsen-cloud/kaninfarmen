@@ -32,18 +32,18 @@ export class HudScene extends Phaser.Scene {
   }
 
   create(data: HudData): void {
-    const st = (size: number, color = '#ffffff') => ({ fontFamily: FONT, fontSize: `${size}px`, fontStyle: 'bold', color, stroke: '#1b2a1b', strokeThickness: Math.max(3, size / 7) });
+    const st = (size: number, color = '#ffffff') => ({ fontFamily: FONT, fontSize: `${size}px`, fontStyle: 'bold', color, stroke: '#344d40', strokeThickness: 3 });
 
     // soft vignette + rounded panels give the smooth look some depth
-    this.add.image(GAME_W / 2, GAME_H / 2, 'vignette').setDisplaySize(GAME_W, GAME_H).setAlpha(0.55);
+    this.add.image(GAME_W / 2, GAME_H / 2, 'vignette').setDisplaySize(GAME_W, GAME_H).setAlpha(0.24);
     const panel = (x: number, y: number, w: number, h: number) =>
-      this.add.graphics().fillStyle(0x1b2a1b, 0.45).fillRoundedRect(x, y, w, h, 18);
+      this.add.graphics().fillStyle(0x344d40, 0.12).fillRoundedRect(x, y + 4, w, h, 18).fillStyle(0xfff5df, 0.96).fillRoundedRect(x, y, w, h, 18).lineStyle(2, 0xd6c5a4, 1).strokeRoundedRect(x, y, w, h, 18);
     panel(12, 12, 250, 150);
 
-    this.hearts = this.add.text(28, 18, '', { ...st(34, '#ff4d6d'), fontFamily: 'Arial, sans-serif' });
-    this.scoreText = this.add.text(28, 62, '0', st(42, '#ffffff'));
-    this.multText = this.add.text(150, 70, '', st(30, '#f7e04a')).setVisible(false);
-    this.carrotText = this.add.text(28, 120, '', st(20, '#f28b26'));
+    this.hearts = this.add.text(28, 18, '', { ...st(34, '#bd705d'), strokeThickness: 0, fontFamily: 'Arial, sans-serif' });
+    this.scoreText = this.add.text(28, 62, '0', { ...st(42, '#344d40'), strokeThickness: 0 });
+    this.multText = this.add.text(150, 70, '', { ...st(30, '#92502f'), strokeThickness: 0 }).setVisible(false);
+    this.carrotText = this.add.text(28, 120, '', { ...st(20, '#92502f'), strokeThickness: 0 });
 
     this.minimap = new Minimap(this, data.level, GAME_W - 176, 12);
 

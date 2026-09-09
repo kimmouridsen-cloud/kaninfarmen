@@ -14,7 +14,7 @@ const boot = () =>
   parent: 'game',
   width: GAME_W,
   height: GAME_H,
-  backgroundColor: '#1b2a1b',
+  backgroundColor: '#344d40',
   pixelArt: false,
   roundPixels: false,
   antialias: true,
@@ -26,6 +26,6 @@ const boot = () =>
   scene: [BootScene, MenuScene, GameScene, HudScene, GameOverScene],
   }));
 
-// Wait for the pixel font so text is measured correctly; never block the game on it.
+// Wait for the UI font so text is measured correctly; never block the game on it.
 const ready = document.fonts ? document.fonts.load('bold 16px "Fredoka"').catch(() => undefined) : Promise.resolve();
 Promise.race([ready, new Promise((r) => setTimeout(r, 1500))]).then(boot);

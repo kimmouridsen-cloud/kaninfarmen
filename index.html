@@ -5,23 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#1b2a1b" />
+  <meta name="theme-color" content="#344d40" />
   <title>Kaninfarmen</title>
   <style>
     @font-face {
       font-family: 'Fredoka';
-      src: url('./assets/fonts/Fredoka-Bold.ttf') format('truetype');
+      src: url('/assets/fonts/Fredoka-Bold.ttf') format('truetype');
       font-weight: 700;
       font-display: block;
     }
-    html, body { margin: 0; padding: 0; background: #1b2a1b; height: 100%; overflow: hidden; }
+    html, body { margin: 0; padding: 0; background: #344d40; height: 100%; overflow: hidden; }
     #game { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
     canvas { touch-action: none; }
   </style>
 </head>
 <body>
   <div id="game"></div>
-  <!-- Force the pixel font to load before Phaser measures any text -->
+  <!-- Force the UI font to load before Phaser measures any text -->
   <div style="position:absolute;left:-9999px;font-family:'Fredoka';font-weight:700">.</div>
   <script type="module" src="/src/main.ts"></script>
 </body>

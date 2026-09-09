@@ -18,11 +18,11 @@ export class Minimap {
     const h = level.height;
     const key = `minimap-${Math.random().toString(36).slice(2)}`;
     this.tex = scene.textures.createCanvas(key, w, h)!;
-    this.tex.context.fillStyle = '#10141c';
+    this.tex.context.fillStyle = '#34483e';
     this.tex.context.fillRect(0, 0, w, h);
     this.tex.refresh();
 
-    const frame = scene.add.graphics().fillStyle(0x1b2a1b, 0.55).fillRoundedRect(-4, -4, w * SCALE + 16, h * SCALE + 16, 12).lineStyle(3, 0xf0e2c2, 0.8).strokeRoundedRect(-4, -4, w * SCALE + 16, h * SCALE + 16, 12);
+    const frame = scene.add.graphics().fillStyle(0xfff5df, 0.96).fillRoundedRect(-4, -4, w * SCALE + 16, h * SCALE + 16, 12).lineStyle(3, 0xd6c5a4, 1).strokeRoundedRect(-4, -4, w * SCALE + 16, h * SCALE + 16, 12);
     this.img = scene.add.image(4, 4, key).setOrigin(0).setScale(SCALE);
     this.bunnyDot = scene.add.circle(0, 0, 2.5, 0xffffff).setStrokeStyle(1, 0x000000);
     for (let i = 0; i < 6; i++) this.farmerDots.push(scene.add.circle(0, 0, 2.5, 0xff3b3b).setStrokeStyle(1, 0x000000).setVisible(false));
@@ -42,7 +42,7 @@ export class Minimap {
   }
 
   private colorFor(g: number, o: number, carrot: boolean): string {
-    if (o === O.TREE || o === O.TREE2 || o === O.HEDGE || o === O.BUSH) return '#2f5a28';
+    if (o === O.TREE || o === O.TREE2 || o === O.HEDGE || o === O.BUSH) return '#527452';
     if (o >= O.FENCE_BASE && o <= O.FENCE_BASE + 15) return '#7a4f2a';
     if (o === O.HOUSE_ROOF || o === O.HOUSE_WALL || o === O.HOUSE_DOOR) return '#c8463a';
     if (o === O.BARN_ROOF || o === O.BARN_WALL || o === O.BARN_DOOR) return '#8a3a30';
@@ -50,10 +50,10 @@ export class Minimap {
     switch (g) {
       case G.PATH:
       case G.PATH2:
-        return '#d8b87f';
+        return '#eeddb8';
       case G.WATER:
       case G.WATER_EDGE:
-        return '#3f86c9';
+        return '#83babb';
       case G.SOIL:
       case G.SOIL2:
         return '#8c5c34';
@@ -64,9 +64,9 @@ export class Minimap {
       case G.MEADOW:
         return '#7cc45c';
       case G.FOREST_FLOOR:
-        return '#2f5a28';
+        return '#527452';
       default:
-        return '#5fa646';
+        return '#94b579';
     }
   }
 

@@ -1,6 +1,6 @@
 /**
- * Smooth "toy world" vector art, drawn with Canvas 2D at ART_PX per tile and
- * scaled down to the 16 px world. Rounded shapes, gradients and soft shadows
+ * Cozy storybook vector art, drawn with Canvas 2D at ART_PX per tile and
+ * scaled down to the 16 px world. Organic silhouettes, matte colors and soft shadows
  * instead of pixel art. Every texture here can later be replaced by an
  * illustrated PNG with the same key and frame layout.
  */
@@ -51,8 +51,8 @@ function linear(ctx: Ctx, x0: number, y0: number, x1: number, y1: number, a: str
 
 function withShadow(ctx: Ctx, blur: number, offY: number, alpha: number, fn: () => void): void {
   ctx.save();
-  ctx.shadowColor = `rgba(0,0,0,${alpha})`;
-  ctx.shadowBlur = blur;
+  ctx.shadowColor = `rgba(45,57,40,${alpha * 0.65})`;
+  ctx.shadowBlur = blur * 0.5;
   ctx.shadowOffsetY = offY;
   fn();
   ctx.restore();
@@ -76,11 +76,11 @@ function groundShadow(ctx: Ctx, cx: number, cy: number, rx: number, ry: number, 
 export function buildSmoothTextures(scene: Phaser.Scene): void {
   buildTileset(scene);
   buildBunny(scene);
-  buildPerson(scene, 'farmer', '#4a86d9', '#2f4f8f', '#e6bf5c', '#b3714f');
-  buildPerson(scene, 'farmhand', '#d94a4a', '#556b2f', '#8b5a2b', '#5a3a1a');
+  buildPerson(scene, 'farmer', '#769ba7', '#445f70', '#e6bf5c', '#b3714f');
+  buildPerson(scene, 'farmhand', '#bd7055', '#657351', '#8b5a2b', '#5a3a1a');
   // crisp large versions for the menu / game over screens
   buildBunny(scene, 'bunny_big', 4);
-  buildPerson(scene, 'farmer_big', '#4a86d9', '#2f4f8f', '#e6bf5c', '#b3714f', 4);
+  buildPerson(scene, 'farmer_big', '#769ba7', '#445f70', '#e6bf5c', '#b3714f', 4);
   buildAnimals(scene);
   buildItems(scene);
   buildMisc(scene);
@@ -106,6 +106,12 @@ function buildTileset(scene: Phaser.Scene): void {
     sc.clearRect(0, 0, P, P);
     sc.save();
     fn(sc);
+    sc.globalCompositeOperation = 'source-atop';
+    const grain = prng(id + 701);
+    for (let i = 0; i < 90; i++) {
+      sc.fillStyle = i % 2 ? 'rgba(255,247,218,0.055)' : 'rgba(59,49,35,0.035)';
+      sc.fillRect(grain() * P, grain() * P, .8, .8);
+    }
     sc.restore();
     ctx.drawImage(scratch, o.x, o.y);
     // extrude edges by TILE_MARGIN px on every side
@@ -124,53 +130,56 @@ function buildTileset(scene: Phaser.Scene): void {
     c.fillStyle = a;
     c.fillRect(0, 0, P, P);
     const r = prng(seed + 100);
-    for (let i = 0; i < 5; i++) ellipse(c, r() * P, r() * P, 10 + r() * 10, 6 + r() * 6, b + '66');
+    for (let i = 0; i < 18; i++) ellipse(c, 3 + r() * (P - 6), 3 + r() * (P - 6), 0.6 + r(), 0.5, b + '80');
     for (let i = 0; i < blades; i++) {
-      const x = r() * P;
-      const y = r() * P;
+      const x = 5 + r() * (P - 10);
+      const y = 8 + r() * (P - 16);
       c.strokeStyle = bladeColor;
       c.lineWidth = 2;
       c.lineCap = 'round';
       c.beginPath();
       c.moveTo(x, y + 4);
-      c.quadraticCurveTo(x + 1, y, x + 3, y - 4);
+      c.quadraticCurveTo(x, y, x - 3, y - 2);
+      c.moveTo(x, y + 4);
+      c.quadraticCurveTo(x + 1, y, x + 4, y - 3);
       c.stroke();
     }
   };
 
-  tile(G.GRASS, (c) => grassBase(c, 1, '#79c651', '#6fbb48', 7, 'rgba(255,255,255,0.18)'));
+  tile(G.GRASS, (c) => grassBase(c, 1, '#94b579', '#88a86e', 7, 'rgba(255,255,255,0.18)'));
   tile(G.GRASS2, (c) => {
-    grassBase(c, 2, '#7cc954', '#6fbb48', 6, 'rgba(255,255,255,0.18)');
+    grassBase(c, 2, '#96b77b', '#88a86e', 6, 'rgba(255,255,255,0.18)');
     circle(c, 18, 40, 3, 'rgba(255,255,255,0.35)');
     circle(c, 44, 18, 2.5, 'rgba(255,255,255,0.35)');
   });
-  tile(G.MEADOW, (c) => grassBase(c, 3, '#8ad35f', '#79c651', 9, 'rgba(255,255,255,0.22)'));
-  tile(G.FOREST_FLOOR, (c) => grassBase(c, 4, '#4f8f3b', '#437c32', 5, 'rgba(0,0,0,0.12)'));
+  tile(G.MEADOW, (c) => grassBase(c, 3, '#a3bd83', '#94b579', 9, 'rgba(255,255,255,0.22)'));
+  tile(G.FOREST_FLOOR, (c) => grassBase(c, 4, '#607e58', '#56714f', 5, 'rgba(0,0,0,0.12)'));
 
   const sandBase = (c: Ctx, seed: number, a: string, b: string) => {
     c.fillStyle = a;
     c.fillRect(0, 0, P, P);
     const r = prng(seed);
-    for (let i = 0; i < 4; i++) ellipse(c, r() * P, r() * P, 12 + r() * 10, 8 + r() * 6, b + '55');
+    for (let i = 0; i < 22; i++) ellipse(c, r() * P, r() * P, 0.7, 0.5, b + '80');
     for (let i = 0; i < 9; i++) {
       const x = r() * P;
       const y = r() * P;
       ellipse(c, x, y, 2 + r() * 2.5, 1.5 + r() * 1.5, i % 3 === 0 ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.08)');
     }
   };
-  tile(G.PATH, (c) => sandBase(c, 5, '#e8cf9a', '#dfc38a'));
+  tile(G.PATH, (c) => sandBase(c, 5, '#eeddb8', '#dfcba3'));
   tile(G.PATH2, (c) => {
-    sandBase(c, 6, '#ead3a0', '#dfc38a');
+    sandBase(c, 6, '#efdfbb', '#dfcba3');
     ellipse(c, 30, 34, 7, 4, 'rgba(0,0,0,0.07)');
   });
-  tile(G.YARD, (c) => sandBase(c, 7, '#e9dcb8', '#dccda6'));
-  tile(G.PEN, (c) => sandBase(c, 8, '#c9a06a', '#b98f5c'));
+  tile(G.YARD, (c) => sandBase(c, 7, '#e9ddc1', '#dbccb0'));
+  tile(G.PEN, (c) => sandBase(c, 8, '#c8b08a', '#b6a07c'));
 
   const soil = (c: Ctx, seed: number, dark: boolean) => {
-    c.fillStyle = dark ? '#6f4a2c' : '#8a5a36';
+    c.fillStyle = dark ? '#795744' : '#967057';
     c.fillRect(0, 0, P, P);
-    for (let y = 0; y < P; y += 16) {
-      fillRR(c, -4, y + 3, P + 8, 9, 5, linear(c, 0, y + 3, 0, y + 12, dark ? '#8a5f3c' : '#a06c42', dark ? '#5e3e24' : '#7a4c2c'));
+    for (let y = 0; y < P; y += 32) {
+      fillRR(c, -4, y + 10, P + 8, 3, 1.5, dark ? '#6c4e3e' : '#856049');
+      fillRR(c, -4, y + 14, P + 8, 2, 1, 'rgba(237,210,164,0.13)');
     }
     const r = prng(seed);
     for (let i = 0; i < 6; i++) ellipse(c, r() * P, r() * P, 2, 1.2, 'rgba(0,0,0,0.12)');
@@ -183,7 +192,7 @@ function buildTileset(scene: Phaser.Scene): void {
   tile(G.CARROT_SOIL, (c) => soil(c, 11, true));
 
   const water = (c: Ctx, seed: number) => {
-    c.fillStyle = '#5ab0e6';
+    c.fillStyle = '#83babb';
     c.fillRect(0, 0, P, P);
     const r = prng(seed);
     for (let i = 0; i < 4; i++) {
@@ -207,9 +216,9 @@ function buildTileset(scene: Phaser.Scene): void {
   });
 
   // ---- fences (rounded posts and rails with soft shadow)
-  const wood = '#b57a45';
-  const woodDark = '#8d5a2f';
-  const woodLight = '#d9a06a';
+  const wood = '#aa805c';
+  const woodDark = '#795c46';
+  const woodLight = '#d6b58a';
   for (let mask = 0; mask < 16; mask++) {
     tile(O.FENCE_BASE + mask, (c) => {
       const cx = P / 2;
@@ -229,7 +238,7 @@ function buildTileset(scene: Phaser.Scene): void {
         if (mask & 4) railV(cx, P + 2, cx - 3.5);
         // post
         fillRR(c, cx - 6, 14, 12, 34, 5, linear(c, cx - 6, 0, cx + 6, 0, woodLight, woodDark));
-        fillRR(c, cx - 6, 14, 12, 6, 3, '#e7b982');
+        fillRR(c, cx - 6, 14, 12, 6, 3, '#edcf9f');
       });
     });
   }
@@ -250,30 +259,44 @@ function buildTileset(scene: Phaser.Scene): void {
     tile(id, (c) => {
       groundShadow(c, cx, 56, r, 7, 0.28);
       fillRR(c, cx - 4, 40, 9, 20, 4, linear(c, cx - 4, 0, cx + 5, 0, '#8a5a3a', '#5e3a1f'));
-      withShadow(c, 8, 5, 0.3, () => {
-        circle(c, cx, 30, r, radial(c, cx - 8, 20, r + 8, leafLight, leafDark, 2));
+      // Overlapping lobes and leaf strokes read as foliage, even at game scale.
+      const lobes = [[-11, 1, .62], [10, 4, .65], [0, -10, .7], [-8, -10, .6], [10, -9, .57], [0, 5, .72]];
+      withShadow(c, 5, 3, 0.24, () => {
+        for (const [dx, dy, size] of lobes) circle(c, cx + dx, 29 + dy, r * size, leafDark);
       });
-      circle(c, cx - 10, 24, r * 0.45, leafLight + 'aa');
-      circle(c, cx + 8, 36, r * 0.36, leaf + '99');
-      circle(c, cx - 6, 18, 4, 'rgba(255,255,255,0.35)');
+      for (const [dx, dy, size] of lobes) ellipse(c, cx + dx - 1, 26 + dy, r * size * .92, r * size * .83, leaf);
+      ellipse(c, cx - 7, 18, r * .56, r * .39, leafLight);
+      const random = prng(id + 42);
+      for (let i = 0; i < 13; i++) {
+        const x = cx - 14 + random() * 28;
+        const y = 16 + random() * 24;
+        c.strokeStyle = i % 3 ? leafDark + '66' : leafLight;
+        c.lineWidth = 1.5;
+        c.lineCap = 'round';
+        c.beginPath(); c.moveTo(x - 2, y); c.quadraticCurveTo(x, y + 3, x + 3, y - 1); c.stroke();
+      }
     });
   };
-  treeTile(O.TREE, '#4fa84a', '#2f7a33', '#7fd06a', 32, 22);
-  treeTile(O.TREE2, '#5db357', '#37853a', '#8fd97a', 27, 18);
+  treeTile(O.TREE, '#668957', '#45664a', '#a0ba76', 32, 22);
+  treeTile(O.TREE2, '#769261', '#4d7052', '#b0c38a', 27, 18);
   tile(O.HEDGE, (c) => {
     groundShadow(c, 32, 56, 30, 6, 0.25);
     withShadow(c, 6, 4, 0.28, () => {
-      fillRR(c, -6, 10, P + 12, 44, 16, linear(c, 0, 10, 0, 54, '#5fb857', '#2f7a33'));
+      fillRR(c, -6, 10, P + 12, 44, 16, '#66875b');
     });
-    circle(c, 14, 22, 8, 'rgba(255,255,255,0.18)');
-    circle(c, 46, 30, 6, 'rgba(255,255,255,0.14)');
+    for (const x of [5, 20, 37, 55]) {
+      ellipse(c, x, 20, 12, 9, '#7f9d68');
+      ellipse(c, x + 4, 38, 10, 7, '#597950');
+    }
   });
   tile(O.BUSH, (c) => {
     groundShadow(c, 32, 54, 20, 6, 0.25);
     withShadow(c, 6, 4, 0.28, () => {
-      circle(c, 32, 34, 18, radial(c, 26, 26, 24, '#7fd06a', '#2f7a33', 2));
+      circle(c, 22, 37, 13, '#648353');
+      circle(c, 41, 36, 13, '#648353');
+      circle(c, 31, 28, 14, '#87a36a');
     });
-    circle(c, 24, 26, 4, 'rgba(255,255,255,0.35)');
+    ellipse(c, 27, 24, 6, 3, '#a0b87b');
   });
   tile(O.ROCK, (c) => {
     groundShadow(c, 32, 50, 18, 5, 0.25);
@@ -284,7 +307,7 @@ function buildTileset(scene: Phaser.Scene): void {
   });
   tile(O.TROUGH, (c) => {
     groundShadow(c, 32, 50, 26, 5, 0.22);
-    withShadow(c, 4, 3, 0.25, () => fillRR(c, 6, 22, 52, 24, 6, linear(c, 0, 22, 0, 46, '#b57a45', '#7c4d27')));
+    withShadow(c, 4, 3, 0.25, () => fillRR(c, 6, 22, 52, 24, 6, linear(c, 0, 22, 0, 46, '#aa805c', '#7c4d27')));
     fillRR(c, 10, 26, 44, 12, 4, linear(c, 0, 26, 0, 38, '#7fd0ff', '#4ea3dd'));
   });
 
@@ -308,7 +331,7 @@ function buildTileset(scene: Phaser.Scene): void {
     c.fillRect(0, P - 6, P, 6);
   });
   tile(O.HOUSE_ROOF, (c) => {
-    c.fillStyle = linear(c, 0, 0, 0, P, '#e2604a', '#b8432f');
+    c.fillStyle = linear(c, 0, 0, 0, P, '#c77c60', '#a55c48');
     c.fillRect(0, 0, P, P);
     for (let y = 0; y < P; y += 16) {
       fillRR(c, -4, y + 8, P + 8, 10, 5, 'rgba(0,0,0,0.12)');
@@ -316,17 +339,17 @@ function buildTileset(scene: Phaser.Scene): void {
     }
   });
   tile(O.BARN_WALL, (c) => {
-    c.fillStyle = linear(c, 0, 0, 0, P, '#c6473a', '#a03429');
+    c.fillStyle = linear(c, 0, 0, 0, P, '#b96954', '#93513f');
     c.fillRect(0, 0, P, P);
     for (let x = 0; x < P; x += 16) fillRR(c, x + 2, -4, 12, P + 8, 4, 'rgba(255,255,255,0.08)');
     c.fillStyle = 'rgba(0,0,0,0.1)';
     c.fillRect(0, P - 6, P, 6);
   });
   tile(O.BARN_DOOR, (c) => {
-    c.fillStyle = linear(c, 0, 0, 0, P, '#c6473a', '#a03429');
+    c.fillStyle = linear(c, 0, 0, 0, P, '#b96954', '#93513f');
     c.fillRect(0, 0, P, P);
     withShadow(c, 4, 2, 0.25, () => fillRR(c, 10, 12, 44, 52, 6, '#fbf1da'));
-    c.strokeStyle = '#a03429';
+    c.strokeStyle = '#93513f';
     c.lineWidth = 4;
     c.lineCap = 'round';
     c.beginPath();
@@ -339,7 +362,7 @@ function buildTileset(scene: Phaser.Scene): void {
     c.stroke();
   });
   tile(O.BARN_ROOF, (c) => {
-    c.fillStyle = linear(c, 0, 0, 0, P, '#6d6d7a', '#4d4d58');
+    c.fillStyle = linear(c, 0, 0, 0, P, '#777f79', '#535f5b');
     c.fillRect(0, 0, P, P);
     for (let y = 0; y < P; y += 16) fillRR(c, -4, y + 8, P + 8, 10, 5, 'rgba(0,0,0,0.14)');
   });
@@ -383,7 +406,7 @@ function buildTileset(scene: Phaser.Scene): void {
   });
   tile(D.CORN, (c) => {
     for (const x of [18, 44]) {
-      fillRR(c, x - 3, 8, 6, 52, 3, linear(c, x - 3, 0, x + 3, 0, '#5fb857', '#2f7a33'));
+      fillRR(c, x - 3, 8, 6, 52, 3, linear(c, x - 3, 0, x + 3, 0, '#88a570', '#45664a'));
       ellipse(c, x - 9, 30, 8, 3, '#4faa48');
       ellipse(c, x + 9, 40, 8, 3, '#4faa48');
       fillRR(c, x - 3, 22, 7, 14, 3.5, linear(c, x - 3, 0, x + 4, 0, '#ffe680', '#e2b93a'));
@@ -437,61 +460,51 @@ function buildBunny(scene: Phaser.Scene, key = 'bunny', k = 1): void {
   const tex = scene.textures.createCanvas(key, BUNNY_F * 3 * k, BUNNY_F * k)!;
   const c = tex.context;
   c.scale(k, k);
-  const fur = '#fbf8f2';
-  const furShade = '#dcd5c8';
-  const pink = '#f7b3c4';
-  const drawEar = (x: number, y: number, tilt: number, inner: boolean) => {
-    c.save();
-    c.translate(x, y);
-    c.rotate(tilt);
-    ellipse(c, 0, -14, 6, 15, linear(c, -6, 0, 6, 0, fur, furShade));
-    if (inner) ellipse(c, 0, -13, 3, 10, pink);
+  const fur = '#fff8e9';
+  const ink = '#726455';
+  const pink = '#dfa092';
+  const oval = (x: number, y: number, rx: number, ry: number, color: string, outline = true) => {
+    ellipse(c, x, y, rx, ry, color);
+    if (outline) { c.strokeStyle = ink; c.lineWidth = 1.6; c.stroke(); }
+  };
+  const ear = (x: number, y: number, tilt: number, inner: boolean, floppy = false) => {
+    c.save(); c.translate(x, y); c.rotate(tilt);
+    oval(0, -10, 5.4, floppy ? 11 : 14, fur);
+    if (inner) oval(0, -10, 2.5, floppy ? 7 : 10, pink, false);
     c.restore();
   };
   const draw = (ox: number, facing: 'down' | 'up' | 'side') => {
-    c.save();
-    c.translate(ox, 0);
-    withShadow(c, 6, 4, 0.22, () => {
-      if (facing === 'side') {
-        drawEar(30, 26, 0.35, true);
-        drawEar(36, 24, 0.05, false);
-      } else {
-        drawEar(24, 24, -0.18, facing === 'down');
-        drawEar(40, 24, 0.18, facing === 'down');
-      }
-      // body
-      ellipse(c, 32, 46, 18, 13, radial(c, 26, 40, 24, fur, furShade, 4));
-      // head
-      circle(c, 32, 30, 14, radial(c, 27, 25, 18, '#ffffff', furShade, 2));
-    });
-    // soft outline so the white bunny reads on light paths
-    c.strokeStyle = 'rgba(90,70,60,0.45)';
-    c.lineWidth = 2;
-    c.beginPath();
-    c.ellipse(32, 46, 18, 13, 0, 0.2, Math.PI - 0.2);
-    c.stroke();
-    c.beginPath();
-    c.arc(32, 30, 14, Math.PI * 0.15, Math.PI * 0.85);
-    c.stroke();
-    // feet
-    ellipse(c, 22, 57, 7, 3.5, furShade);
-    ellipse(c, 42, 57, 7, 3.5, furShade);
+    c.save(); c.translate(ox, 0);
+    const side = facing === 'side';
+    ear(side ? 32 : 23, 25, side ? -.2 : -.16, facing !== 'up');
+    ear(side ? 40 : 40, 25, side ? .55 : .38, facing === 'down', true);
+    oval(31, 45, 17, 13, '#eee2ce');
+    oval(23, 56, 8, 4, fur);
+    oval(42, 56, 8, 4, fur);
+    oval(31, 43, 13, 11, fur, false);
+    // A rust-colored neckerchief makes the hero recognizable from every direction.
+    c.beginPath(); c.moveTo(21, 35); c.lineTo(44, 35); c.lineTo(37, 42); c.lineTo(22, 40); c.closePath();
+    c.fillStyle = '#b96549'; c.fill();
+    c.beginPath(); c.moveTo(22, 38); c.lineTo(15, 45); c.lineTo(24, 44); c.closePath(); c.fill();
+    oval(side ? 35 : 32, 29, side ? 15 : 16, 12.5, fur);
     if (facing === 'down') {
-      circle(c, 26, 30, 2.6, '#2b2b2b');
-      circle(c, 38, 30, 2.6, '#2b2b2b');
-      circle(c, 27, 29, 0.9, '#fff');
-      circle(c, 39, 29, 0.9, '#fff');
-      ellipse(c, 32, 35, 2.4, 1.6, pink);
-      circle(c, 21, 34, 3, 'rgba(247,150,170,0.45)');
-      circle(c, 43, 34, 3, 'rgba(247,150,170,0.45)');
-    } else if (facing === 'side') {
-      circle(c, 39, 29, 2.6, '#2b2b2b');
-      circle(c, 40, 28, 0.9, '#fff');
-      ellipse(c, 45, 33, 2, 1.4, pink);
-      circle(c, 36, 34, 3, 'rgba(247,150,170,0.4)');
-      circle(c, 13, 46, 5, '#ffffff'); // tail
+      oval(25, 28, 2, 2.8, '#3e4039', false);
+      oval(39, 28, 2, 2.8, '#3e4039', false);
+      circle(c, 25.5, 27, .7, '#fff'); circle(c, 39.5, 27, .7, '#fff');
+      oval(22, 33, 3.8, 2, '#efd0ba', false); oval(42, 33, 3.8, 2, '#efd0ba', false);
+      oval(32, 32, 2.2, 1.5, pink, false);
+      c.strokeStyle = ink; c.lineWidth = 1.1;
+      c.beginPath(); c.moveTo(32, 34); c.quadraticCurveTo(29, 38, 27, 35);
+      c.moveTo(32, 34); c.quadraticCurveTo(35, 38, 37, 35); c.stroke();
+    } else if (side) {
+      oval(41, 27, 2, 2.8, '#3e4039', false); circle(c, 41.5, 26, .7, '#fff');
+      oval(49, 31, 2, 1.5, pink, false);
+      oval(38, 33, 3.4, 2, '#efd0ba', false);
+      oval(14, 46, 6, 5.5, fur);
     } else {
-      circle(c, 32, 54, 5, '#ffffff'); // tail
+      oval(32, 51, 6.5, 6, fur);
+      c.strokeStyle = '#d6c6ae'; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(29, 48); c.quadraticCurveTo(33, 46, 35, 50); c.stroke();
     }
     c.restore();
   };
@@ -641,7 +654,7 @@ function buildItems(scene: Phaser.Scene): void {
     c.quadraticCurveTo(30, 34, 24, 44);
     c.quadraticCurveTo(18, 34, 14, 16);
     c.closePath();
-    c.fillStyle = linear(c, 14, 16, 34, 44, '#ffa64d', '#e8731c');
+    c.fillStyle = linear(c, 14, 16, 34, 44, '#f3aa55', '#d67b39');
     c.fill();
   });
   fillRR(c, 17, 20, 4, 2, 1, 'rgba(0,0,0,0.12)');
@@ -655,7 +668,7 @@ function buildItems(scene: Phaser.Scene): void {
     c.save();
     c.translate(24 + dx, 14);
     c.rotate(tilt);
-    ellipse(c, 0, -6, 3, 8, '#4fb54a');
+    ellipse(c, 0, -6, 3, 8, '#608c50');
     c.restore();
   }
   // clover
